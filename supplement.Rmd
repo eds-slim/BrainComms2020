@@ -1,0 +1,395 @@
+---
+title: "Acute Stroke Paper Supplemental Results"
+author: Eckhard Schlemm
+#output:   
+#    redoc::redoc:
+#    highlight_output: FALSE
+#output: bookdown::html_document2
+#output: html_document
+always_allow_html: yes
+---
+  
+```{r include=FALSE}
+require(knitr)
+knitr::opts_chunk$set(cache = TRUE, warning = FALSE, 
+                      message = FALSE, cache.lazy = FALSE)
+
+inline_hook <- function(x) {
+  if(is.numeric(x)) x <- round(x, 4)
+  paste(as.character(x), collapse=", ")
+}
+knit_hooks$set(inline = inline_hook)
+
+outputFormat <- knitr:::pandoc_to()
+  if(outputFormat == 'html'){
+    echoFlag <- FALSE
+  }  else {
+    echoFlag <- 2
+  }
+
+require(captioner)
+table_nums <- captioner::captioner(prefix = "S-Tab.")
+figure_nums <- captioner::captioner(prefix = "S-Fig.")
+
+source('captionSupplement.rmd')
+```
+
+
+```{r message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE}
+source('./loaddata.r')
+```
+
+# Results
+## Missing data
+```{r message=FALSE, warning=FALSE, include=FALSE}
+idx.complete.imaging <- d.GGP %>% filter(lab == 0 & relpos == 'ipsi') %>% ungroup() %>%
+  dplyr::select(c(numID,tp,GGP)) %>% 
+  spread(tp,GGP) %>% 
+  dplyr::select(-numID) %>% 
+  complete.cases()
+```
+A total of `r length(unique(data.clinical$numID))` patients were analysed in the study. Clinical assessment by NIHSS score, FM score and relative grip strength was complete with recordings from all four time points (3-5 days; 1, 3, and 12 months after stroke) in `r sum(idx.complete)` patients. The pattern of missing clinical data is displayed in S-Tab. 1. In `r sum(idx.complete.imaging)` patients probabilistic tracking and network reconstruction were performed at all four time points. In three subjects, network data were missing from the acute phase, networks from one subject each could not be obtained at three and twelve months after stroke, and from one subject at both those times, due to insufficient DTI quality.
+`r table.ref('tab.missing')` reports details about the clinical outcome parameters collected during the study.
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+tbl.missing <- data.clinical_long %>% filter(clin.meas.name != 'Gripstrenght_affected_hand') %>% 
+  ungroup() %>%
+  dplyr::select(c(ID,tp,clin.meas.name,clin.meas.value)) %>% 
+  arrange(tp, clin.meas.name) %>% 
+  mutate(tp=sprintf('tp%s',tp)) %>% 
+  unite(temp,tp,clin.meas.name) %>% 
+  mutate(clin.meas.value = if_else(is.finite(clin.meas.value),'●','')) %>% 
+  spread(temp,clin.meas.value) %>% 
+  dplyr::select(c(ID, tp0_NIHSS, tp0_rGS, tp0_FM, tp1_NIHSS, tp1_rGS, tp1_FM,tp3_NIHSS, tp3_rGS, tp3_FM,tp12_NIHSS, tp12_rGS, tp12_FM))
+```
+
+```{r echo=echoFlag, message=FALSE, warning=FALSE}
+tbl.missing %>% 
+  flextable() %>% 
+  align(align = 'center', part = 'body') %>% 
+  add_header_row(values = c('ID','3-5d','1m','3m','12m'), colwidths = c(1,3,3,3,3)) %>% 
+  set_header_labels(values = list(tp0_FM = 'FM'
+                                  ,tp0_rGS = 'rGS'
+                                  ,tp0_NIHSS = 'NIHSS'
+                                  ,tp1_FM = 'FM'
+                                  ,tp1_rGS = 'rGS'
+                                  ,tp1_NIHSS = 'NIHSS'
+                                  ,tp3_FM = 'FM'
+                                  ,tp3_rGS = 'rGS'
+                                  ,tp3_NIHSS = 'NIHSS'
+                                  ,tp12_FM = 'FM'
+                                  ,tp12_rGS = 'rGS'
+                                  ,tp12_NIHSS = 'NIHSS')) %>% 
+  tbl.flex.post('') %>% merge_v(part = 'header') %>%  align(align = 'center', part = 'body') %>% 
+  bg(bg = 'lightgreen', i = which(idx.complete))-> temp
+temp
+#  row_spec(which(idx.complete), background = 'lightgreen')
+```
+`r table_nums('tab.missing')`
+
+## Numerical connectivity
+```{r message=FALSE, warning=FALSE, include=FALSE, paged.print=TRUE, cache=TRUE,  cache.extra = tools::md5sum("./GGPtimerelpos.r")}
+source('./GGPtimerelpos.r')
+```
+Global structural connectivity, quantified by the median edge weight, was shown to decrease non-linearly over time with a disassociation between stroke and intact hemispheres. `r table.ref('tab.GCtimerelpos.ix')` reports statistical details of the exponential models fit to intrahemispheric connectivity both jointly and separately.
+```{r include=FALSE}
+tbl.AIC.GGP <- mutate(AIC.GGP, mod='exp') %>% 
+  bind_rows(mutate(AIC.GGP.lin, mod='lin'))  
+  filter(lab == 0) %>% droplevels() %>% 
+  ungroup() %>% 
+  mutate(lab = as_labeller(GGP_names)(lab)) %>% 
+  #mutate(value = as.character(value)) %>% 
+  mutate(term="AIC", p.value=value, std.error=value, estimate=value) %>% 
+  dplyr::select(-c(threshold,name,lab, value)) %>% 
+  unite(term,term,mod)
+```
+
+```{r echo=echoFlag, message=FALSE, warning=FALSE}
+tbl.GGP.relpos %>% 
+  bind_rows(tbl.GGP %>% add_column(relpos = 'both')) %>% 
+  filter(lab == 0) %>% droplevels() %>% 
+  dplyr::select(-c(df, statistic, conf.low, conf.high)) %>% 
+  ungroup() %>% 
+  mutate(lab = as_labeller(GGP_names)(lab)) %>% 
+  mutate(term = dplyr::recode(as.factor(term), `del.(Intercept)`='del')) %>% 
+  gather(statsname,value,estimate,std.error,p.value) %>% 
+  unite(temp,statsname,relpos) %>% 
+  spread(temp, value) %>% 
+  dplyr::select(lab, term
+                , estimate_both, std.error_both, p.value_both
+                , estimate_ipsi, std.error_ipsi, p.value_ipsi
+                , estimate_contra, std.error_contra, p.value_contra
+  ) %>% 
+  mutate(term=dplyr::recode(term, del = 'Δ', del.relposipsi = 'Δ~ipsi~')) %>% 
+  #bind_rows(tbl.AIC.GGP.relpos) %>% 
+  tbl.flex() %>% 
+  bold(i = ~term == 'Δ' & p.value_ipsi < 0.05, j = ~p.value_ipsi) %>% 
+  set_formatter(p.value_ipsi = pvalformatter) %>% 
+  bold(i = ~term == 'Δ' & p.value_contra < 0.05, j = ~p.value_contra) %>% 
+  set_formatter(p.value_contra = pvalformatter) %>% 
+  bold(i = ~term == 'Δ~ipsi~' & p.value_both < 0.05, j = ~p.value_both) %>% 
+  set_formatter(p.value_both = pvalformatter) %>% 
+  add_header_row(values = c('','','joint model','ipsilesional','contralesional'), colwidths = c(1,1,3,3,3)) %>% 
+  set_header_labels(values = list(lab = 'GGP'
+                                  ,term = 'parameter'
+                                  ,estimate_contra = 'estimate'
+                                  ,std.error_contra = 's.e.'
+                                  ,p.value_contra = 'p'
+                                  ,estimate_ipsi = 'estimate'
+                                  ,std.error_ipsi = 's.e.'
+                                  ,p.value_ipsi = 'p'
+                                  ,estimate_both = 'estimate'
+                                  ,std.error_both = 's.e.'
+                                  ,p.value_both = 'p')) %>% 
+  tbl.flex.post(caption) %>% 
+  merge_v(part = 'body') %>% 
+  merge_at(i = 1:2, j = 1, part = 'header') %>% 
+  merge_at(i = 1:2, j = 2, part = 'header')-> temp
+temp
+```
+`r table_nums('tab.GCtimerelpos.ix')`
+
+```{r warning=FALSE, include=FALSE}
+tbl.AIC.GGP.relpos <- mutate(AIC.GGP.relpos, mod='exp') %>% 
+  bind_rows(mutate(AIC.GGP.relpos.lin, mod='lin')) %>% 
+  filter(lab == 0) %>% droplevels() %>% 
+  mutate(value = as.character(value)) %>% 
+  dplyr::select(-c(threshold,name,lab)) %>% 
+  spread(relpos,value) %>% 
+  mutate(term="AIC") %>% 
+  unite(term,term,mod)
+```
+
+
+## Sensitivity analyses for the effect of network density
+In the main text it was established that global network measures change after stroke and that the change is significantly more pronounced in ipsilesional hemispheres compared to contralesional hemispheres. For the analysis there, structural brain networks were not thresholded, retaining their original edge densitiy of approximately 95% Here, we present supplementary results about the effects of time and lesion status on global graph parameters if connectomes are thresholded to a range of common network densities $k$ ranging from k=10% to k=90%. For each subject, a sparsity mask was constructed from the brain network from the first available visit (t~3-5d~ in 27 patients, t~1m~ in 3 patients) by only retaining the k strongest connections and binarizing the result. This sparsity mask was then multiplied edgewise with the connectomes of the same subject at all later time points, thus eliminating weak, potentially spurious connections. Global graph parameters efficiency and modularity were computed for thresholded networks using the Brain Connectivity Toolbox as before and analysed using the non-linear mixed effects regression model
+$$
+y_t\sim a+\Delta(1-\exp(-b t)).
+$$
+
+### Effects of time and lesion status on global graph parameters
+Differences in the time course of GGPs between ipsi- and contralesional hemispheres were assessed by allowing different values of $\Delta$ in the two groups. Results are displayed visually in `r figure.ref('fig.GGPtimerelpos.sensiana')`.
+
+```{r message=FALSE, warning=FALSE, include=FALSE, paged.print=TRUE, cache=TRUE,  cache.extra = tools::md5sum("./GGPtimerelposSupplement.r")}
+source('./GGPtimerelposSupplement.r')
+```
+```{r echo=FALSE, fig.height=8, fig.width=14, message=FALSE, warning=FALSE, fig.cap=fig.GGPtimerelpos.sensiana_cap}
+p.GGP.timecourse.sensiana
+```
+The dependence of the global graph metrics on network density is reflected in the intercept model parameter $a$ which indicates a rapid decline of efficiency and a marked increase in modularity in very sparse networks. An excess decline in ipsilesional efficiency, as measured by Δ~ipsi~ is statistically significant at all but the smallest thresholds. There is no significant difference in the increase in modularity at any threshold. The nuisance parameter $b$ quantifying the rate of change over time is numerically stable across thresholds and not significantly different from zero for all considered GGPs.
+
+The time course of GGPs was also quantified and analysed in stroke and intact hemispheres separately (`r figure.ref('fig.GGPtimerelpos.sensiana.relpos')`).
+```{r echo=FALSE, fig.height=8, fig.width=14, message=FALSE, warning=FALSE, fig.cap=fig.GGPtimerelpos.sensiana.relpos_cap}
+p.GGP.timecourse.relpos.sensiana
+```
+It is seen that decline in efficiency, as well as increase in modularity are significant across thresholds both ipsi- and contralesionally with a numerically larger effect in hemispheres directly affected by stroke, consistent with the interaction analysis above.
+
+
+### Effects of lesion volume on global network change
+In the main text it is shown that lesion volume modulates the change in global network architecture over time in stroke but not intact hemispheres. `r figure.ref('fig.GGPvol.sensiana')` reports a sensitivity analysis for the influence of network density on this effect.
+```{r message=FALSE, warning=FALSE, include=FALSE, paged.print=TRUE, cache=TRUE,  cache.extra = tools::md5sum("./GGPvol.r")}
+source('./GGPvol.r')
+```
+```{r echo=FALSE, fig.height=8, fig.width=14, message=FALSE, warning=FALSE, fig.cap=fig.GGPvol.sensiana_cap}
+p.GGP.vol.sensiana
+```
+It is seen that the interacting effects of lesion volume and lesion status on structural network change (model parameter $\Delta$) persist across thresholds for both global efficiency and modularity. Subgroup analysis for ipsi- and contralesional hemispheres are presented in `r figure.ref('fig.GGPvol.relpos.sensiana')`.
+```{r echo=FALSE, fig.height=8, fig.width=14, message=FALSE, warning=FALSE, fig.cap=fig.GGPvol.relpos.sensiana_cap}
+p.GGP.vol.relpos.sensiana
+```
+Consistent with the joint analysis, there is a significant effect of lesion volume on topological network change in ipsilesional hemispheres across network densities. There is no significant effect of lesion volume on topological network change in contralesional hemispheres at any network density.
+
+## Local graph parameters
+```{r message=FALSE, warning=FALSE, cache=FALSE, include=FALSE, paged.print=TRUE, cache=TRUE,  cache.extra = tools::md5sum("./LGPtbl.r")}
+source('./LGPtbl.r')
+```
+```{r message=FALSE, warning=FALSE, cache=FALSE, include=FALSE, paged.print=TRUE, cache=TRUE,  cache.extra = tools::md5sum("./LGPtimerelpos.r")}
+source('./LGPtimerelpos.r')
+```
+### Local network changes
+Non-linear mixed effects modelling with an exponential effect of time revealed significant differences in the time course of local graph parameters between ipsi- and contralesional hemispheres in a total of `r tbl.LGP.preformat$node %>% unique %>% length()` brain regions, see `r table.ref('tab.LGPtimerelpos.ix')`. The lentiform nucleus was excluded from the mass-univariate analysis because it was contained in or had significant overlap with a majority of the ischemic lesions. Local network architecture was  disrupted in the acute stage, as indicated by a significant effect of lesion status on the model parameter $a$, in the pre- and postcentral, lateralorbitofrontal and inferior frontal (partes orbitalis and triangularis) gyri. Excess ipsilesional change of local network integrity over the study period (model parameter Δ) was localised in this joint analysis to the rostral and caudal anterior cingulate cortices. Focusing on stroke hemispheres alone, significant decline in ipsilesional local network measures over time was detected in more widespread brain areas, including regions of frontal, temporal and parietal lobes as well as the thalamus (`r table.ref('tab.LGPtimerelpos')`). 
+<!--
+S-Fig. 5 in the supplement displays the time course of local connectivity measures of the these regions in stroke and intact hemispheres. Consistent with the global analysis, changes occurred predominantly in the hyperacute phase until three months post stroke with little further decline beyond that time in any ROI.
+-->
+```{r echo=echoFlag, message=FALSE, warning=FALSE}
+tbl.LGP.preformat %>% 
+  mutate(term = dplyr::recode(term, a.relposcontra = 'a~relpos~', del.relposcontra = 'Δ~relpos~')) %>% 
+  tbl.flex() %>% 
+  bold(i = ~stringr::str_detect(term, 'relpos') & p.value < 0.05, j = ~p.value) %>% 
+  set_formatter(p.value = pvalformatter) %>% 
+  set_header_labels(values = list(node = ''
+                                  ,LGP.name = ''
+                                  ,term = 'parameter'
+                                  ,estimate = 'point estimate'
+                                  ,std.error = 'standard error'
+                                  ,p.value = 'p')) %>% 
+  tbl.flex.post('') %>% 
+  merge_v(j = 1, part = 'body') %>% theme_box()-> temp
+temp
+```
+`r table_nums('tab.LGPtimerelpos.ix')`
+```{r echo=echoFlag, message=FALSE, warning=FALSE}
+tbl.LGP.ipsi.preformat  %>% 
+  tbl.flex() %>% 
+  set_formatter(p.value = pvalformatter) %>% 
+  set_header_labels(values = list(node = ''
+                                  ,LGP.name = ''
+                                  ,estimate = 'point estimate Δ'
+                                  ,std.error = 'standard error'
+                                  ,p.value = 'p')) %>% 
+  tbl.flex.post('') %>% 
+  merge_v(j = 1, part = 'body') %>% theme_box()-> temp
+temp
+```
+`r table_nums('tab.LGPtimerelpos')`
+```{r message=FALSE, warning=FALSE, cache=FALSE, include=FALSE, paged.print=TRUE, cache=TRUE,  cache.extra = tools::md5sum("./LGPtimerelpos.r")}
+#source('./LGPtimerelpos.r')
+```
+
+<!--
+### Time course of local network change.
+
+In the main text, `r tbl.LGP.preformat$node %>% unique %>% length()` brain regions with different temporal profiles of local graph measures between ipsi- and contralesional hemispheres as well as `r tbl.LGP.ipsi.preformat$node %>% unique %>% length()` regions with a significant decline of local network integrity in stroke hemispheres have been identified. `r figure.ref('fig.LGPtimerelpos')` shows the timecourse of strength, local efficiency and local clustering in those regions.
+```{r echo=FALSE, fig.height=25, fig.width=6, message=FALSE, warning=FALSE, fig.cap=fig.LGPtimerelpos_cap}
+p.LGP.timecourse
+```
+-->
+
+### Association between lesion volume and local network change.
+```{r message=FALSE, warning=FALSE, cache=FALSE, include=FALSE, paged.print=TRUE, cache=TRUE,  cache.extra = tools::md5sum("./LGPvol.r")}
+source('./LGPvol.r')
+```
+Change in ipsilesional global network architecture is modulated by lesion volume. In this section we provide details about the modulation of change in local network parameters by lesion volume. The effect of lesion volume on local network change differed between stroke and intact hemispheres in `r nrow(tbl.LGP.vol.preformat)` ROIs.  `r table.ref('tab.LGPvol')`  lists ROIs with a significant interaction between lesion volume and lesion status on the decline of local network integrity.
+
+Ipsilesional decline of local network measures strength, efficiency and clustering was associated with lesion volume in `r nrow(tbl.LGP.vol.ipsi.preformat)` brain regions concentrating in the territory of the middle cerebral artery. `r table.ref('tab.LGPvol.relpos')` reports the effects of lesion volume on local network change in hemispheres directly affected by stroke. No association between lesion volume and local network change was observed in any contralesional ROI.
+
+
+```{r echo=echoFlag, message=FALSE, warning=FALSE}
+tbl.LGP.vol.preformat  %>% 
+  flextable() %>% 
+  bold(i = ~p.value < 0.05/length(unique(nodes$node)), j = ~p.value) %>% 
+  set_formatter(p.value = pvalformatter) %>% 
+  set_header_labels(values = list(node = ''
+                                  ,LGP.name = ''
+                                  ,estimate = 'point estimate of Δ~vol:ipsi~'
+                                  ,std.error = 'standard error'
+                                  ,p.value = 'p')) %>% 
+  tbl.flex.post('') %>% 
+  merge_v() %>% theme_box()-> temp
+temp
+```
+`r table_nums('tab.LGPvol')`
+
+```{r echo=echoFlag, message=FALSE, warning=FALSE}
+tbl.LGP.vol.ipsi.preformat %>% 
+  flextable() %>% 
+  set_formatter(p.value = pvalformatter) %>% 
+  bold(i = ~p.value < 0.05/length(unique(nodes$node)), j = ~p.value) %>% 
+  set_header_labels(values = list(node = ''
+                                  ,LGP.name = ''
+                                  ,estimate = 'point estimate of Δ~vol~'
+                                  ,std.error = 'standard error'
+                                  ,p.value = 'p')) %>% 
+  tbl.flex.post(caption) %>% 
+  merge_v() %>% theme_box()-> temp
+temp
+```
+`r table_nums('tab.LGPvol.relpos')`
+
+# Associations between clinical outcome and network change.
+## Global graph measures
+```{r message=FALSE, warning=FALSE, cache=FALSE, include=FALSE, paged.print=TRUE, cache=TRUE,  cache.extra = tools::md5sum("./clinicalGGP.r")}
+source('./clinicalGGP.r')
+```
+In the main text, an association between change in global network measures and residual symptom burden und motor function was established. `r figure.ref('fig.GGPclinical')` provides visualisations of the cross-sectional associations at three time points after stroke.
+```{r echo=FALSE, fig.height=6, fig.width=6, message=FALSE, warning=FALSE, fig.cap=fig.GGPclinical_cap}
+p.GGP.clinical.time %>%  grid::grid.draw()
+```
+In `r table.ref('tab.GGPclinical')` we report details about the statistical analysis of the relationhip between change in global topology and clinical outcome without including lesion volume as a nuisance regressor.
+```{r echo=echoFlag, message=FALSE, warning=FALSE}
+tbl.GGP.clinical.preformat  %>% 
+  flextable() %>% 
+  bold(i = ~p.value < 0.05, j = ~p.value) %>% 
+  bold(i = ~p.value_1 < 0.05, j = ~p.value_1) %>%
+  bold(i = ~p.value_3 < 0.05, j = ~p.value_3) %>%
+  bold(i = ~p.value_12 < 0.05, j = ~p.value_12) %>%
+  set_formatter(p.value = pvalformatter, p.value_1 = pvalformatter, p.value_3 = pvalformatter, p.value_12 = pvalformatter) %>% 
+  add_header_row(values = c('','','pooled model','1m','3m','12m'), colwidths = c(1,1,3,3,3,3)) %>% 
+  set_header_labels(values = list(clin.meas.name = ''
+                                  ,lab = ''
+                                  ,estimate = 'estimate'
+                                  ,std.error = 's.e.'
+                                  ,p.value = 'p'
+                                  ,estimate_1 = 'estimate'
+                                  ,std.error_1 = 's.e.'
+                                  ,p.value_1 = 'p'
+                                  ,estimate_3 = 'estimate'
+                                  ,std.error_3 = 's.e.'
+                                  ,p.value_3 = 'p'
+                                  ,estimate_12 = 'estimate'
+                                  ,std.error_12 = 's.e.'
+                                  ,p.value_12 = 'p')) %>% 
+  tbl.flex.post('',8,8) %>%
+  merge_v(part = 'header') %>% merge_v(part = 'body')-> temp
+temp
+```
+`r table_nums('tab.GGPclinical')`
+
+## Local graph measures
+```{r message=FALSE, warning=FALSE, cache=FALSE, include=FALSE, paged.print=TRUE, cache=FALSE,  cache.extra = tools::md5sum("./LGPclinical.r")}
+source('./LGPclinical.r')
+```
+For each node, the association of decline in weighted degree, efficiency and clustering until one, three and twelve months after stroke and clustering with relative grip strength, NIHSS and FM scores was assessed by two-stage linear and quasi-Poisson regression. Statistical details with and without inclusion of lesion volume as a nuisance regressor are reported in `r table.ref('tbl.LGPclinical')` and `r table.ref('tbl.LGPclinical.vol')`, respectively.
+```{r echo=echoFlag, message=FALSE, warning=FALSE}
+tbl.LGP.joint.preformat %>% 
+  flextable() %>% 
+  bold(i = ~p.value_NIHSS < 0.05/length(unique(nodes$node)), j = ~p.value_NIHSS) %>% 
+  bold(i = ~p.value_FM < 0.05/length(unique(nodes$node)), j = ~p.value_FM) %>% 
+  bold(i = ~p.value_rGS < 0.05/length(unique(nodes$node)), j = ~p.value_rGS) %>% 
+  set_formatter(p.value_NIHSS = pvalformatter, p.value_FM = pvalformatter, p.value_rGS = pvalformatter) %>% 
+  add_header_row(values = c('','','NIHSS','FM','rGS'), colwidths = c(1,1,3,3,3)) %>% 
+  set_header_labels(values = list(node = ''
+                                  ,LGP.name=''
+                                  ,estimate_NIHSS = 'estimate'
+                                  ,std.error_NIHSS = 's.e.'
+                                  ,p.value_NIHSS = 'p'
+                                  ,estimate_FM = 'estimate'
+                                  ,std.error_FM = 's.e.'
+                                  ,p.value_FM = 'p'
+                                  ,estimate_rGS = 'estimate'
+                                  ,std.error_rGS = 's.e.'
+                                  ,p.value_rGS = 'p')) %>% 
+  tbl.flex.post('',8,8) %>% 
+  merge_v(part = 'header') %>% 
+  merge_v() %>% 
+  theme_box() %>% 
+  align(align = 'center', part = 'header', i = 1, j = 3:11) -> temp
+temp
+```
+`r table_nums('tbl.LGPclinical')`
+```{r echo=echoFlag, message=FALSE, warning=FALSE}
+tbl.LGP.vol.joint.preformat %>% 
+  flextable() %>% 
+  bold(i = ~p.value_NIHSS < 0.05/length(unique(nodes$node)), j = ~p.value_NIHSS) %>% 
+  bold(i = ~p.value_FM < 0.05/length(unique(nodes$node)), j = ~p.value_FM) %>% 
+  bold(i = ~p.value_rGS < 0.05/length(unique(nodes$node)), j = ~p.value_rGS) %>% 
+  set_formatter(p.value_NIHSS = pvalformatter, p.value_FM = pvalformatter, p.value_rGS = pvalformatter) %>% 
+  add_header_row(values = c('','','NIHSS','FM','rGS'), colwidths = c(1,1,3,3,3)) %>% 
+  set_header_labels(values = list(node = ''
+                                  ,LGP.name=''
+                                  ,estimate_NIHSS = 'estimate'
+                                  ,std.error_NIHSS = 's.e.'
+                                  ,p.value_NIHSS = 'p'
+                                  ,estimate_FM = 'estimate'
+                                  ,std.error_FM = 's.e.'
+                                  ,p.value_FM = 'p'
+                                  ,estimate_rGS = 'estimate'
+                                  ,std.error_rGS = 's.e.'
+                                  ,p.value_rGS = 'p')) %>% 
+  tbl.flex.post('') %>% 
+  merge_v(part = 'header') %>% 
+  merge_v() %>% theme_box() %>%
+  align(align = 'center', part = 'header', i = 1, j = 3:11) -> temp
+temp
+```
+`r table_nums('tbl.LGPclinical.vol')`

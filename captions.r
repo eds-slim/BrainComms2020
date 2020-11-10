@@ -1,0 +1,10 @@
+fig.clinicaltime_cap <- figure_nums(name = 'fig.clinicaltime', caption = 'Temporal profiles of clinical outcome parameters. Abscissæ indicate time after stroke. Thin lines represent linearly interpolated profiles for individual patients. Circles and bars denote cross sectional means and asymptotic standard errors, respectively. Thick lines visualise the non-linear model $\\mathrm{Outcome}_t\\sim a + \\Delta(1-\\exp(-b\\,t))$.')
+
+tab.clinicaltime_cap <- table_nums(name = 'tab.clinicaltime', caption = 'Point estimates, standard errors and p-values for model parameters $a$, $b$, Δ obtained from fitting the exponential model (1) to temporal profiles of clinical outcome parameters. Standard errors and $p$-values result from non-linear mixed-effects regressions fit using the R package nlme.')
+
+fig.GCtimerelpos_cap <- figure_nums(name = 'fig.GCtimerelpos', caption = 'Temporal profile of numerical intrahemispheric connectivity in ipsilesional (orange) and contralesional (red) hemispheres. Abscissæ indicate time after stroke. Circles and bars represent crosssectional means and standard errors, respectively. Thick lines visualise modelled exponential decline.')
+
+
+fig.GGPtimerelpos_cap <- figure_nums(name = 'fig.GGPtimerelpos', caption = 'Temporal profile of intrahemispheric global graph parameters in ipsilesional (orange) and contralesional (red) hemispheres. Abscissæ indicate time after stroke. Circles and bars represent crosssectional means and standard errors, respectively. Thick lines visualise modelled exponential change.')
+
+tab.GGPtimerelpos.ix_cap <- table_nums(name = 'tab.GGPtimerelpos.ix', caption = 'Point estimates, standard errors, and p-values of model parameters obtained from fitting the exponential model (1) to temporal profiles of intrahemispheric global graph parameters. The model parameter of topological change, Δ, was allowed to vary between stroke and intact hemispheres. Standard errors and $p$-values result from joint non-linear mixed-effects regressions fit using the R package nlme.')

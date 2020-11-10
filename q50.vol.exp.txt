@@ -1,0 +1,7 @@
+effect,group,term,estimate,std.error,df,statistic,p.value
+fixed,fixed,a.(Intercept),0.004759,0.003126,846,1.522,0.1283
+fixed,fixed,a.logvol,-0.003562,0.001398,846,-2.549,0.01099
+fixed,fixed,a.relposipsi,-0.01727,0.002987,846,-5.782,1.04e-08
+fixed,fixed,a.logvol:relposipsi,0.01847,0.001471,846,12.56,2.734e-33
+fixed,fixed,b,0.9629,0.2368,846,4.066,5.228e-05
+fixed,fixed,c,0.4727,0.004983,846,94.86,0

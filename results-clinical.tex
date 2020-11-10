@@ -1,0 +1,448 @@
+\documentclass[]{article}
+\usepackage{lmodern}
+\usepackage{amssymb,amsmath}
+\usepackage{ifxetex,ifluatex}
+\usepackage{fixltx2e} % provides \textsubscript
+\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+\else % if luatex or xelatex
+  \ifxetex
+    \usepackage{mathspec}
+  \else
+    \usepackage{fontspec}
+  \fi
+  \defaultfontfeatures{Ligatures=TeX,Scale=MatchLowercase}
+\fi
+% use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+% use microtype if available
+\IfFileExists{microtype.sty}{%
+\usepackage{microtype}
+\UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\usepackage[margin=1in]{geometry}
+\usepackage{hyperref}
+\hypersetup{unicode=true,
+            pdftitle={Network changes after stroke -- results of longitudinal SFB data},
+            pdfauthor={Eckhard Schlemm},
+            pdfborder={0 0 0},
+            breaklinks=true}
+\urlstyle{same}  % don't use monospace font for urls
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.77,0.63,0.00}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\usepackage{graphicx,grffile}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+\IfFileExists{parskip.sty}{%
+\usepackage{parskip}
+}{% else
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt plus 2pt minus 1pt}
+}
+\setlength{\emergencystretch}{3em}  % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{0}
+% Redefines (sub)paragraphs to behave more like sections
+\ifx\paragraph\undefined\else
+\let\oldparagraph\paragraph
+\renewcommand{\paragraph}[1]{\oldparagraph{#1}\mbox{}}
+\fi
+\ifx\subparagraph\undefined\else
+\let\oldsubparagraph\subparagraph
+\renewcommand{\subparagraph}[1]{\oldsubparagraph{#1}\mbox{}}
+\fi
+
+%%% Use protect on footnotes to avoid problems with footnotes in titles
+\let\rmarkdownfootnote\footnote%
+\def\footnote{\protect\rmarkdownfootnote}
+
+%%% Change title format to be more compact
+\usepackage{titling}
+
+% Create subtitle command for use in maketitle
+\providecommand{\subtitle}[1]{
+  \posttitle{
+    \begin{center}\large#1\end{center}
+    }
+}
+
+\setlength{\droptitle}{-2em}
+
+  \title{Network changes after stroke -- results of longitudinal SFB data}
+    \pretitle{\vspace{\droptitle}\centering\huge}
+  \posttitle{\par}
+    \author{Eckhard Schlemm}
+    \preauthor{\centering\large\emph}
+  \postauthor{\par}
+    \date{}
+    \predate{}\postdate{}
+  
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{wrapfig}
+\usepackage{float}
+\usepackage{colortbl}
+\usepackage{pdflscape}
+\usepackage{tabu}
+\usepackage{threeparttable}
+\usepackage{threeparttablex}
+\usepackage[normalem]{ulem}
+\usepackage{makecell}
+\usepackage{xcolor}
+
+\begin{document}
+\maketitle
+
+\hypertarget{results}{%
+\section{Results}\label{results}}
+
+After initial screening of consecutive patients, a total of 59 patients
+were considered for inclusion in the study. At the end of the
+recruitment period, 30 patients with subcortical infarcts in the
+territory of the middle cerebral artery and diffusion MRI from at least
+two timepoints were available for analysis (Fig. 1). Further details of
+the available data are presented in the Supplement.
+
+Imaging and clinical testing in the acute phase took place after a
+median of 4 (IQR{[}1,5{]}) days. Assessment in the subacute and chronic
+phases was performed 4.92857142857143
+({[}4.28571428571429,6.14285714285714{]}), 14.7142857142857
+({[}13.2857142857143,16.1428571428571{]}) and 51.8571428571429
+({[}50,53.4285714285714{]}) weeks after stroke, respectively.
+
+\hypertarget{clinical-data}{%
+\subsection{Clinical data}\label{clinical-data}}
+
+\hypertarget{baseline-demographics}{%
+\subsubsection{Baseline demographics}\label{baseline-demographics}}
+
+Of the 27 stroke patients included in the study, 10 were female; their
+age was 65.5926 +/- 12.1125 (mean +/- standard deviation); 18
+(66.6667\%, CI\textsubscript{95} {[}46.015, 82.7647{]}\%) had a lesion
+in the left hemisphere; the infarct volume as measured at the first time
+point, 3-5 days after stroke, ranged from 0.61 ml to 69.15 ml (median
+1.85 ml, IQR {[}1.53, 12.44{]} ml). The lesions were predominantly
+located in subcortical brain areas, involving the centrum ovale, the
+corona radiata and the internal capsule (Fig0). There was no
+statistically significant association of lesion volume with side of the
+lesion (d=-0.4849, t\textsubscript{25}=1.1879, p=0.246).
+
+Initial severity of stroke symptoms ranged from 0 to 13 on the NIH
+Stroke Scale (median 3.5, IQR {[}2.25,6.5{]}). Quasi-Poisson regressions
+indicated that patients with larger infarct volumes were affected more
+severely at the acute (p\textsubscript{3-5d}=0.0221), but not at the
+later time points at one, three or twelve months after stroke. There was
+no effect of side of the lesion, nor age or sex of the patient on stroke
+severity.
+
+Impairments in strength and dexterity of the affected hand were
+quantified in the acute phase as relative grip strength ranging from 0
+to 1.12 (median 0.68, IQR {[}0.34, 0.84{]}) and Fugl-Meyer score ranging
+from 4 to 66 (median 56, IQR {[}27.5, 62.75{]}). In these motor specific
+outcome measures there was no statistically significant association with
+volume or side of the lesion, nor with age or sex of the patient.
+
+\hypertarget{time-course-of-symptom-severity-and-motor-function}{%
+\subsubsection{Time course of symptom severity and motor
+function}\label{time-course-of-symptom-severity-and-motor-function}}
+
+Over the course of the study most patients improved clinically. The
+median NIHSS score, the ratio of grip strength in affected to unaffected
+hand, and FM score improved to 0 (IQR {[}0, 2.5{]}), 0.96 (IQR
+{[}0.8575, 1.0225{]}) and 66 (IQR {[}61.5, 66{]}) at 12 months
+follow-up, respectively (Fig. 1). Growth curve analyses indicated
+statistical superiority of exponential models
+(AIC\textsubscript{exp}\textsuperscript{NIHSS} = 449.6305,
+AIC\textsubscript{exp}\textsuperscript{GS} = -13.0516,
+AIC\textsubscript{exp}\textsuperscript{FM} = 821.1731) over linear fits
+(AIC\textsubscript{lin}\textsuperscript{NIHSS} = 480.7426,
+AIC\textsubscript{lin}\textsuperscript{GS} = 15.2338,
+AIC\textsubscript{lin}\textsuperscript{FM} = 849.85) for each of the
+three outcome variables (Tab. 1).
+
+\begin{figure}
+\centering
+\includegraphics{results-clinical_files/figure-latex/unnamed-chunk-10-1.pdf}
+\caption{Fig. 1: Temporal profiles of clinical outcome parameters.
+Horizontal axes indicate time after stroke. Thin lines represent
+linearly interpolated profiles for individual patients. Circles and bars
+denote cross-sectional means and asymptotic standard errors,
+respectively. Thick lines visualize the non-linear model
+\(\mathrm{Outcome}_t\sim a + \Delta(1-\exp(-b\,t))\). NIHSS=National
+Institutes of Health Stroke Scale, d=days, m=months.}
+\end{figure}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{temp}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## TypeError: Attempting to change the setter of an unconfigurable property.
+## TypeError: Attempting to change the setter of an unconfigurable property.
+\end{verbatim}
+
+\includegraphics[width=4.08in,height=2.35in,keepaspectratio]{results-clinical_files/figure-latex/unnamed-chunk-11-1.png}
+Tab. 1: Point estimates, standard errors and p-values for model
+parameters \(a\) (initial value), \(b\) (rate of change), and Δ (total
+amount of change) obtained from fitting the exponential model (1) to
+temporal profiles of clinical outcome parameters. Standard errors and
+\(p\)-values result from non-linear mixed-effects regressions fit using
+the R package nlme. FM = Fugl-Meyer, NIHSS = National Institutes of
+Health Stroke Scale, rGS = relative grip strength.
+
+\hypertarget{network-properties}{%
+\subsection{Network properties}\label{network-properties}}
+
+The mean network density, i.e.~the proportion of non-zero connections,
+was (95.6 +/- 1.8) \% with no significant differences between left and
+right hemispheres or between time points.
+
+\hypertarget{effects-of-time-and-lesion-status}{%
+\subsubsection{Effects of time and lesion
+status}\label{effects-of-time-and-lesion-status}}
+
+\hypertarget{numerical-global-connectivity}{%
+\paragraph{Numerical global
+connectivity}\label{numerical-global-connectivity}}
+
+Analysis of numerical measures of intrahemispheric connectivity revealed
+that, based on the Akaike information criterion (AIC), the time course
+of median edge weight was better described by an exponential than a
+linear model (AIC\textsubscript{exp} = -1014.5272,
+AIC\textsubscript{lin} = -967.8284). The temporal profiles of
+intrahemispheric \(q_{50}\), depicted in Fig. 3, did not differ
+significantly between ipsi- and contralesional hemispheres with a trend
+towards larger decline in stroke hemispheres
+(Δ\textsubscript{ipsi}=-9e-04 +/- 0.0035, p=0.8071). Subgroup modelling
+showed a significant exponential decline of median edge weight in stroke
+hemispheres (Δ=-0.0068 +/- 0.0036, p=0.0605; AIC\textsubscript{exp} =
+-539.1404, AIC\textsubscript{lin} = -517.7656), but did not reveal a
+significant effect of time on connectivity in contralesional hemispheres
+(Δ=-0.0019 +/- 0.0045, p=0.6694; AIC\textsubscript{exp} = -486.0607,
+AIC\textsubscript{lin} = -464.8828). Further details, including
+estimates of the nuisance model parameters a and b are given in
+supplementary table S-Tab. 2.
+
+\hypertarget{global-network-architecture}{%
+\paragraph{Global network
+architecture}\label{global-network-architecture}}
+
+Growth curve analysis of whole-brain global graph parameters using
+non-linear mixed-effects regression modelling revealed consistent
+effects of time (Fig. 3, Tab. 2). Global efficiency declined
+exponentially over time in stroke but not intact hemispheres. Modularity
+increased significantly in both stroke and intact hemispheres, with a
+numerically larger effect ipsilesionally. These effects were not
+sensitive to the choice of network density and persisted over a wide
+range of thresholds (Supplement). Inclusion of age and sex as nuisance
+regressors did not substantially change the results (not shown).
+\includegraphics{results-clinical_files/figure-latex/unnamed-chunk-14-1.pdf}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{temp}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## TypeError: Attempting to change the setter of an unconfigurable property.
+## TypeError: Attempting to change the setter of an unconfigurable property.
+\end{verbatim}
+
+\includegraphics[width=7.23in,height=2.53in,keepaspectratio]{results-clinical_files/figure-latex/unnamed-chunk-16-1.png}
+Tab. 2: Point estimates, standard errors, and p-values of model
+parameters obtained from fitting the exponential model (1) to temporal
+profiles of intrahemispheric global graph parameters. In the joint model
+, the parameter of topological change, Δ, was allowed to vary between
+stroke and intact hemispheres. Standard errors and \(p\)-values result
+from non-linear mixed-effects regressions fit either jointly (`joint
+model') or separately for stroke and intact hemispheres, using the R
+package nlme. GGP = Global graph parameter, s.e. = standard error.
+
+\hypertarget{local-network-architecture}{%
+\paragraph{Local network
+architecture}\label{local-network-architecture}}
+
+\hypertarget{association-of-network-properties-with-lesion-volume}{%
+\subsubsection{Association of network properties with lesion
+volume}\label{association-of-network-properties-with-lesion-volume}}
+
+\hypertarget{numerical-connectivity-and-global-graph-parameters}{%
+\paragraph{Numerical connectivity and global graph
+parameters}\label{numerical-connectivity-and-global-graph-parameters}}
+
+Global networks measures at different time points after stroke are
+depicted in relation to lesion volume in Fig. 4. Non-linear-mixed
+effects modelling revealed a significant positive association between
+lesion volume and global connectivity decline in ipsilesional but not
+contralesional hemispheres. This effect did not depend on age or sex of
+the patient, nor on the side of the lesion. Specifically, larger
+declines in ipsilesional median connectivity over time were observed in
+patients with larger stroke lesions, while there was no significant
+decline in patients with very small lesions. Orthogonally, median
+connectivity in stroke hemispheres did not depend on lesion volume in
+the acute phase, but a significant negative association was observed at
+all three later time points. Similar effects were observed for global
+graph parameters. Specifically, larger lesion volumes were associated
+with a larger decline in ipsilesional global efficiency, as well as a
+larger increase in ipsilesional modularity. Ipsilesional measures of
+network topology were associated with lesion volume in the subacute and
+chronic, but not the acute phase. There was no evidence of a
+relationship between size of the infarct and contralesional network
+metrics. Statistical details are provided in Tab. 4.
+
+\begin{figure}
+\centering
+\includegraphics{results-clinical_files/figure-latex/unnamed-chunk-18-1.pdf}
+\caption{Fig. 4: Relation between global network measures of stroke and
+intact hemispheres, and stroke lesion volume. Line segments represent
+cross-sectional predicted means of network measures in the acute (3-5d,
+solid), subacute (1m, dotted), and chronic (3m and 12m, dashed) phases
+after stroke. d=days, m=months.}
+\end{figure}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{temp}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## TypeError: Attempting to change the setter of an unconfigurable property.
+## TypeError: Attempting to change the setter of an unconfigurable property.
+\end{verbatim}
+
+\includegraphics[width=7.20in,height=5.03in,keepaspectratio]{results-clinical_files/figure-latex/unnamed-chunk-19-1.png}
+Tab. 4: Point estimates, standard errors, and p-values of model
+parameters obtained from fitting the exponential model (1) to temporal
+profiles of global graph measures. In the joint model, total change Δ is
+modelled as a linear function of log lesion volume, with both intercept
+and slope allowed to vary between stroke und intact hemispheres.
+Standard errors and \(p\)-values result from non-linear mixed-effects
+regressions fit either jointly (`joint model') or separately for stroke
+and intact hemispheres, using the R package nlme. s.e.=standard error.
+
+In a univariate sensitivity analysis, these effects were stable across
+network densities imposed by proportional thresholding of network
+matrices (Supplement).
+
+\hypertarget{association-of-network-properties-with-clinical-variables}{%
+\subsubsection{Association of network properties with clinical
+variables}\label{association-of-network-properties-with-clinical-variables}}
+
+\hypertarget{global-network-measures}{%
+\paragraph{Global network measures}\label{global-network-measures}}
+
+Fig. 5 shows clinical outcome parameters in relation to change in global
+network metrics. Two-stage regressions revealed a significant
+association between decline of ipsilesional median connectivity until
+one, three and twelve months after stroke and NIHSS score (p=0.0087),
+relative grip strength (p=0.0023), and FM score (p=0.0013) at these time
+points. Similarly, loss of global efficiency and gain of global
+modularity in stroke hemispheres was associated with higher NIHSS scores
+(p\textsubscript{Eff}=0.0195, p\textsubscript{Mod}=0.0013) as well as
+lower relative grip strengths (p\textsubscript{Eff}=0.0479,
+p\textsubscript{Mod}=0.0087) and lower FM scores
+(p\textsubscript{Eff}=0.0303, p\textsubscript{Mod}=0.0017).
+
+\includegraphics{results-clinical_files/figure-latex/unnamed-chunk-21-1.pdf}
+Tab. 6 reports statistical details of volume-corrected regressions.
+After including lesion size as a nuisance regressor, the associations of
+change in global network architecture and NIHSS persisted at a lower
+statistical siginificance. The relationship between global modularity
+and relative grip strength, and global efficiency and Fugl-Meyer score
+failed to maintain statistical significance.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{temp}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## TypeError: Attempting to change the setter of an unconfigurable property.
+## TypeError: Attempting to change the setter of an unconfigurable property.
+\end{verbatim}
+
+\includegraphics[width=7.82in,height=2.62in,keepaspectratio]{results-clinical_files/figure-latex/unnamed-chunk-22-1.png}
+Tab. 6: Regression coefficients (point estimates, standard errors and
+p-values) on the link scale between change in global network measures
+and clinical outcome. Log lesion volume is included as a nuisance
+predictor. In the case of NIHSS and FM\^{}*\^{}=66-FM scores,
+quasi-Poisson regressions with a \(\log\)-link are used; in the case of
+relative grip strength a Gaussian regression with identity link is used.
+The first three columns represent pooled estimates from joint two-stage
+regressions across the subacute and chronic stages. NIHSS = National
+Institute of Health Stroke Scale, rGS = relative grips strength,
+FM=Fugl-Meyer, s.e.=standard error
+
+Post-hoc tests for associations between decline of connectivity and
+clinical outcome at fixed time points revealed consistent effects that
+were strongest after three months, but did not, individually, reach
+statistical significance (see Fig SX in the supplement for a visual
+representation of cross-sectional regressions).
+
+\hypertarget{local-graph-measures}{%
+\paragraph{Local graph measures}\label{local-graph-measures}}
+
+Mass-univariate two-stage linear and quasi-Poisson regressions
+identified associations between clinical outcome and change in local
+connectivity (strength) in a total of 14 brain areas. Higher residual
+NIHSS scores were most strongly associated with connectivity decline in
+pre-/paracental, inferior frontal, middle-/superior temporal gyri, as
+well as the thalamus, posterior cingulum and visual areas (cuneus,
+pericalcarine gyrus). Statistical details including lesion volume
+corrected regression results are provided in the Supplement.
+
+
+\end{document}

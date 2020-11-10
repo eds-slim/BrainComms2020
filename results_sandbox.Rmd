@@ -1,0 +1,33 @@
+We hypothesized that the time courses of structural network parameters are associated with clinical recovery. 
+```{r message=FALSE, warning=FALSE, cache=FALSE, include=FALSE, paged.print=TRUE, cache=TRUE,  cache.extra = tools::md5sum("./clinicalstructuralcorrs.r")}
+source('./clinicalstructuralcorrs.r')
+```
+
+#### GC
+```{r}
+tbl.GC.clinical.chronic.gaussian %>% dplyr::select(-term)
+tbl.GC.clinical.chronic.quasipoisson %>% dplyr::select(-term)
+tbl.GC.clinical.vol.chronic.gaussian %>% dplyr::select(-term)
+tbl.GC.clinical.vol.chronic.quasipoisson %>% dplyr::select(-term)
+```
+
+Cross-sectional linear and quasi-Poisson regressions revealed that in the chronic phase after three and twelve months, the total change in median ipsilesional connectivity strength was associated with relative grip strength (combined p=`r tbl.GC.clinical.chronic.gaussian %>% filter(clin.meas.name=='rGS') %>% pull('p.value')`), NIHSS (p=`r tbl.GC.clinical.chronic.quasipoisson %>% filter(clin.meas.name=='NIHSS') %>% pull('p.value')`), as well as the Fugl-Meyer score (p=`r tbl.GC.clinical.chronic.quasipoisson %>% filter(clin.meas.name=='FM') %>% pull('p.value')`). The associations with NIHSS and FM persisted as a trend after inclusion of lesion volume as nuisance regressor (p~NIHSS~=`r tbl.GC.clinical.vol.chronic.quasipoisson %>% filter(clin.meas.name=='NIHSS') %>% pull('p.value')`, p~FM~=`r tbl.GC.clinical.vol.chronic.quasipoisson %>% filter(clin.meas.name=='FM') %>% pull('p.value')`). No associations were observed in the acute or subacute stage.
+
+Longitudinally over the observation period, there was a numerically negative association between decline of ipsilesional median connectivity and relative grip strength which did not reach statistical significance (p=0.0799).
+
+#### GGPs
+```{r}
+tbl.GGP.clinical.chronic.gaussian %>% filter(threshold==1) %>% dplyr::select(-c(threshold,term))
+tbl.GGP.clinical.chronic.quasipoisson %>% filter(threshold==1) %>% dplyr::select(-c(threshold,term))
+tbl.GGP.clinical.vol.chronic.gaussian %>% filter(threshold==1) %>% dplyr::select(-c(threshold,term))
+tbl.GGP.clinical.vol.chronic.quasipoisson %>% filter(threshold==1) %>% dplyr::select(-c(threshold,term))
+```
+An analogous analysis was performed for global graph parameters. There was weak statistical evidence for an association of higher relative grip strength with a smaller decrease in global efficiency (p=`r tbl.GGP.clinical.chronic.gaussian %>% filter(clin.meas.name=='rGS' & lab==1 & threshold==1) %>% pull('p.value')`) and clustering  (p=`r tbl.GGP.clinical.chronic.gaussian %>% filter(clin.meas.name=='rGS' & lab==2 & threshold==1) %>% pull('p.value')`), and a larger increase in modularity (p=`r tbl.GGP.clinical.chronic.gaussian %>% filter(clin.meas.name=='rGS' & lab==3 & threshold==1) %>% pull('p.value')`) in the chronic phase, which was mediated by lesion volume. There were significant cross-sectional associations between global graph parameters and NIHSS after three months with higher degrees of network degeneration, i.e. decline in efficiency and clustering, increase in modularity, being associated with greater symptom severity. Increase in modularity between the acute and chronic stages was associated with impaired motor function on the Fugl-Meyer scale. The associations remained significant after correcting for lesion volume and were not sensitive to the choice of network density threshold.
+Non-linear growth curve modelling confirmed a weak association over time between the model parameter D as marker for the increase in modularity and grip strength (p=0.0520).
+
+#### LGPs
+Mass-univariate cross-sectional regression tests for association between change in local graph parameters and clinical outcome showed associations between change in strength, efficiency and clustering in the middletemporal and postcentral gyri, the pars triangularis and the thalamus and NIHSS three months after stroke; between LGPs in the thalamus and postcentral gyrus and FM at one, three and twelve months; as well as widespread associations between LGPs and GS at the subacute and chronic stages. Associations were partly mediated by lesion volume.
+
+
+```
+Analysis of numerical measures of intrahemispheric connectivity revealed that the time course of median edge weight differed significantly between ipsi- and contralesional hemispheres ($\Delta$~relpos~=`r tbl.GGP.exp$estimate[tbl.GGP.exp$term=='del.relposipsi']`+/-`r tbl.GGP.exp$std.error[tbl.GGP.exp$term=='del.relposipsi']`, p=`r tbl.GGP.exp$p.value[tbl.GGP.exp$term=='del.relposipsi']`). Post-hoc subgroup modelling showed an exponential decline of median edge weight in stroke hemispheres ($\Delta$=`r tbl.GGP.exp.relpos %>% filter(term=='del' & relpos=='ipsi') %>% pull('estimate')`+/-`r tbl.GGP.exp.relpos %>% filter(term=='del' & relpos=='ipsi') %>% pull('std.error')`, p=`r tbl.GGP.exp.relpos %>% filter(term=='del' & relpos=='ipsi') %>% pull('p.value')`, AIC~exp~ =`r  AIC.GGP.exp.relpos %>% filter(relpos=='ipsi') %>% pull('AIC')`, AIC~lin~= `r  AIC.GGP.lin.relpos %>% filter(relpos=='ipsi') %>% pull('AIC')`), but did not reveal a significant effect of time on connectivity in contralesional hemispheres ($\Delta$=`r tbl.GGP.exp.relpos %>% filter(term=='del' & relpos=='contra') %>% pull('estimate')`+/-`r tbl.GGP.exp.relpos %>% filter(term=='del' & relpos=='contra') %>% pull('std.error')`, p=`r tbl.GGP.exp.relpos %>% filter(term=='del' & relpos=='contra') %>% pull('p.value')`, AIC~exp~ =`r  AIC.GGP.exp.relpos %>% filter(relpos=='contra') %>% pull('AIC')`, AIC~lin~= `r  AIC.GGP.lin.relpos %>% filter(relpos=='contra') %>% pull('AIC')`).

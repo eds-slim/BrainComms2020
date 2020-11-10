@@ -1,0 +1,9 @@
+relpos,effect,group,term,estimate,std.error,df,statistic,p.value
+contra,fixed,fixed,a.(Intercept),0.005157,0.01024,408,0.5038,0.6147
+contra,fixed,fixed,a.logvol,-0.0005188,0.002041,408,-0.2542,0.7995
+contra,fixed,fixed,b,0.1143,0.471,408,0.2428,0.8083
+contra,fixed,fixed,c,0.4758,0.00583,408,81.63,7.81e-255
+ipsi,fixed,fixed,a.(Intercept),-0.008498,0.002911,408,-2.919,0.003704
+ipsi,fixed,fixed,a.logvol,0.01243,0.001285,408,9.672,4.665e-20
+ipsi,fixed,fixed,b,0.4581,0.09515,408,4.814,2.087e-06
+ipsi,fixed,fixed,c,0.47,0.00564,408,83.33,2.799e-258

@@ -1,0 +1,364 @@
+---
+title: "Network changes after stroke -- results of longitudinal SFB data"
+author: Eckhard Schlemm
+output: html_document
+#output:   
+#    redoc::redoc:
+#    highlight_output: FALSE
+#output: bookdown::html_document2
+#output: pdf_document
+always_allow_html: yes
+---
+
+```{r include=FALSE}
+require(knitr)
+knitr::opts_chunk$set(cache = TRUE, warning = FALSE, 
+                      message = FALSE, cache.lazy = FALSE)
+
+inline_hook <- function(x) {
+    if(is.numeric(x)) x <- round(x, 4)
+    paste(as.character(x), collapse=", ")
+}
+knit_hooks$set(inline = inline_hook)
+
+outputFormat <- knitr:::pandoc_to()
+  if(outputFormat == 'html'){
+    echoFlag <- FALSE
+  }  else {
+    echoFlag <- 2
+  }
+
+require(captioner)
+table_nums <- captioner::captioner(prefix = "Tab.")
+figure_nums <- captioner::captioner(prefix = "Fig.")
+
+source('captions.rmd')
+
+```
+
+```{r message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE}
+source('./loaddata.r')
+```
+
+# Results
+
+After initial screening of consecutive patients, a total of 59 patients were considered for inclusion in the study. At the end of the recruitment period, 30 patients with subcortical infarcts in the territory of the middle cerebral artery and diffusion MRI from at least two timepoints were available for analysis (Fig. 1). Further details of the available data are presented in the Supplement.  
+
+```{r message=FALSE, warning=FALSE, include=FALSE, paged.print=TRUE, cache=TRUE, cache.extra = tools::md5sum("./examtimes.r")}
+source('./examtimes.r')
+```
+Imaging and clinical testing in the acute phase took place after a median of `r d.time.acute[1,'median']` (IQR[`r d.time.acute[1,'lower']`,`r d.time.acute[1,'upper']`]) days. Assessment in the subacute and chronic phases was performed `r d.time[1,'median']` ([`r d.time[1,'lower']`,`r d.time[1,'upper']`]), `r d.time[2,'median']` ([`r d.time[2,'lower']`,`r d.time[2,'upper']`]) and `r d.time[3,'median']` ([`r d.time[3,'lower']`,`r d.time[3,'upper']`]) weeks after stroke, respectively.
+
+## Clinical data
+### Baseline demographics
+```{r include=FALSE}
+m.Stroke.side<-prop.test(plyr::count(data.patients, vars="Stroke.side")[1,2],nrow(data.clinical), p=.5)
+
+vol.quart<-data.clinical$vol %>% quantile(na.rm=T)
+
+m.vol.Stroke.side <- lm(log(vol)~Stroke.side, data=data.clinical)
+s.vol.Stroke.side <- summary(m.vol.Stroke.side)
+cohen.vol.Stroke.side <- effsize::cohen.d(log(vol)~Stroke.side, data=data.clinical)$estimate
+
+
+m.vol.age <- lm(log(vol)~age, data=data.clinical)
+s.vol.age <- summary(m.vol.age)
+
+m.vol.gender <- lm(log(vol)~gender, data=data.clinical)
+s.vol.gender <- summary(m.vol.gender)
+s.vol.gender
+cohen.vol.gender <- effsize::cohen.d(log(vol)~gender, data=data.clinical)$estimate
+
+```
+Of the `r length(unique(data.clinical$numID))` stroke patients included in the study, `r data.clinical %>% filter(gender=='female') %>% count() %>% pull('n')` were female; their age was `r mean(data.clinical$age)` +/- `r sd(data.clinical$age)` (mean +/- standard deviation); `r data.clinical %>% filter(Stroke.side=='L') %>% count() %>% pull('n')` (`r 100*m.Stroke.side$estimate`%, CI~95~ [`r 100*m.Stroke.side$conf.int[1]`, `r 100*m.Stroke.side$conf.int[2]`]%) had a lesion in the left hemisphere; the infarct volume as measured at the first time point, 3-5 days after stroke, ranged from `r vol.quart[[1]]` ml to `r vol.quart[[5]]` ml (median `r vol.quart[[3]]` ml, IQR [`r vol.quart[[2]]`, `r vol.quart[[4]]`] ml). The lesions were predominantly located in subcortical brain areas, involving the centrum ovale, the corona radiata and the internal capsule (Fig0). There was no statistically significant association of lesion volume with side of the lesion (d=`r cohen.vol.Stroke.side`, t~`r m.vol.Stroke.side$df.residual`~=`r s.vol.Stroke.side$coefficients['Stroke.sideR','t value']`, p=`r s.vol.Stroke.side$coefficients['Stroke.sideR','Pr(>|t|)']`).
+<!--
+nor with age ($\beta$=`r s.vol.age$coefficients['age','Estimate']`, t~`r m.vol.age$df.residual`~=`r s.vol.age$coefficients['age','t value']`, p=`r s.vol.age$coefficients['age','Pr(>|t|)']`) or sex of the patient (d=`r cohen.vol.gender`, t~`r m.vol.gender$df.residual`~=`r s.vol.gender$coefficients['gendermale','t value']`, p=`r s.vol.gender$coefficients['gendermale','Pr(>|t|)']`). 
+-->
+
+
+```{r include=FALSE}
+NIHSS.quart.acute<-data.clinical_long %>% 
+  filter(clin.meas.name == 'NIHSS' & tp == 0) %>% 
+  pull('clin.meas.value') %>% 
+  quantile(na.rm=T)
+```
+```{r include=FALSE}
+stats.clin.meas.vol.poisson<-data.clinical_long %>% 
+  filter(clin.meas.name %in% c('NIHSS','FM')) %>% 
+  group_by(clin.meas.name,tp) %>% 
+  nest() %>% 
+  mutate(mdl=map(data,~glm(clin.meas.value~logvol, data=., family = 'quasipoisson'))) %>% 
+  mutate(tidy=map(mdl,tidy)) %>% 
+  unnest(tidy) %>% 
+  filter(term=='logvol')
+```
+
+
+Initial severity of stroke symptoms ranged from `r NIHSS.quart.acute[[1]]` to `r NIHSS.quart.acute[[5]]` on the NIH Stroke Scale (median `r NIHSS.quart.acute[[3]]`, IQR [`r NIHSS.quart.acute[[2]]`,`r NIHSS.quart.acute[[4]]`]). Quasi-Poisson regressions indicated that patients with larger infarct volumes were affected more severely at the acute (p~3-5d~=`r stats.clin.meas.vol.poisson %>% filter(clin.meas.name == 'NIHSS' & tp == 0) %>% pull('p.value')`), but not at the later time points at one, three or twelve months after stroke. There was no effect of side of the lesion, nor age or sex of the patient on stroke severity.
+
+```{r include=FALSE}
+FM.quart.acute<-data.clinical_long %>% 
+  filter(clin.meas.name == 'FM' & tp == 0) %>% 
+  pull('clin.meas.value') %>% 
+  quantile(na.rm=T)
+
+GS.quart.acute<-data.clinical_long %>% 
+  filter(clin.meas.name == 'rGS' & tp == 0) %>% 
+  pull('clin.meas.value') %>% 
+  quantile(na.rm=T)
+```
+
+Impairments in strength and dexterity of the affected hand were quantified in the acute phase as relative grip strength ranging from `r GS.quart.acute[[1]]` to `r GS.quart.acute[[5]]` (median `r GS.quart.acute[[3]]`, IQR [`r GS.quart.acute[[2]]`, `r GS.quart.acute[[4]]`]) and Fugl-Meyer score ranging from `r FM.quart.acute[[1]]` to `r FM.quart.acute[[5]]` (median `r FM.quart.acute[[3]]`, IQR [`r FM.quart.acute[[2]]`, `r FM.quart.acute[[4]]`]). In these motor specific outcome measures there was no statistically significant association with volume or side of the lesion, nor with age or sex of the patient. 
+
+### Time course of symptom severity and motor function
+```{r include=FALSE}
+NIHSS.quart.chronic<-data.clinical_long %>% 
+  filter(clin.meas.name == 'NIHSS' & tp == 12) %>% 
+  pull('clin.meas.value') %>% 
+  quantile(na.rm=T)
+
+FM.quart.chronic<-data.clinical_long %>% 
+  filter(clin.meas.name == 'FM' & tp == 12) %>% 
+  pull('clin.meas.value') %>% 
+  quantile(na.rm=T)
+
+GS.quart.chronic<-data.clinical_long %>% 
+  filter(clin.meas.name == 'rGS' & tp == 12) %>% 
+  pull('clin.meas.value') %>% 
+  quantile(na.rm=T)
+```
+```{r message=FALSE, warning=FALSE, include=FALSE, paged.print=TRUE, cache=TRUE, cache.extra = tools::md5sum('clinicaltime.r')}
+source('./clinicaltime.r')
+
+```
+Over the course of the study most patients improved clinically. The median NIHSS score, median ratio of grip strength in affected to unaffected hand, and median FM score improved to `r NIHSS.quart.chronic[[3]]` (IQR [`r NIHSS.quart.chronic[[2]]`, `r NIHSS.quart.chronic[[4]]`]), `r GS.quart.chronic[[3]]` (IQR [`r GS.quart.chronic[[2]]`, `r GS.quart.chronic[[4]]`]) and `r FM.quart.chronic[[3]]` (IQR [`r FM.quart.chronic[[2]]`, `r FM.quart.chronic[[4]]`]) at 12 months follow-up, respectively (`r figure.ref('fig.clinicaltime')`). Growth curve analyses indicated statistical superiority of exponential models (AIC~exp~^NIHSS^ = `r AIC.exp %>% filter(clin.meas.name=='NIHSS') %>% pull('AIC')`, AIC~exp~^GS^ = `r AIC.exp %>% filter(clin.meas.name=='rGS') %>% pull('AIC')`, AIC~exp~^FM^ = `r AIC.exp %>% filter(clin.meas.name=='FM') %>% pull('AIC')`) over linear fits (AIC~lin~^NIHSS^ = `r AIC.lin %>% filter(clin.meas.name=='NIHSS') %>% pull('AIC')`, AIC~lin~^GS^ = `r AIC.lin %>% filter(clin.meas.name=='rGS') %>% pull('AIC')`, AIC~lin~^FM^ = `r AIC.lin %>% filter(clin.meas.name=='FM') %>% pull('AIC')`) for each of the three outcome variables (`r table.ref('tab.clinicaltime')`). 
+
+```{r echo=FALSE, fig.height=4, fig.width=12, message=FALSE, warning=FALSE, fig.cap=fig.clinicaltime_cap}
+p.clinical.timecourse
+```
+```{r echo=echoFlag, message=FALSE, warning=FALSE, fig.cap = tab.clinicaltime_cap}
+tbl.clinicaltime.exp %>% 
+  filter(clin.meas.name %in% c('NIHSS', 'FM', 'rGS')) %>% 
+  dplyr::select(-c(df, statistic)) %>% 
+  ungroup() %>% 
+  mutate(clin.meas.name = forcats::fct_relevel(clin.meas.name, 'NIHSS','rGS')) %>% 
+  arrange(clin.meas.name, term) %>% 
+  mutate(term = dplyr::recode(term, del = 'Δ')) %>% 
+  tbl.flex() %>% 
+  merge_v() %>% 
+  align(j = 3:5, align = 'center', part = 'body') %>% 
+  bold(i = ~term == 'Δ', j = ~p.value) %>% 
+  set_formatter(p.value = function(x)(sprintf('%1.2e',x))) %>% 
+  set_header_labels(values = list(clin.meas.name = 'Clinical outcome'
+                                  , term = ''
+                                  ,estimate = 'point estimate'
+                                  , std.error = 'standard error'
+                                  , p.value = 'p')) %>% 
+  tbl.flex.post(caption) -> temp
+temp
+```
+`r table_nums('tab.clinicaltime')`
+
+
+
+
+## Network properties
+The mean network density, i.e. the proportion of non-zero connections, was (95.6 +/- 1.8) % with no significant differences between left and right hemispheres or between time points.
+
+### Effects of time and lesion status
+#### Numerical global connectivity
+```{r message=FALSE, warning=FALSE, include=FALSE, paged.print=TRUE, cache=TRUE, cache.extra = tools::md5sum("./GGPtimerelpos.r")}
+source('./GGPtimerelpos.r')
+```
+Analysis of numerical measures of intrahemispheric connectivity revealed that, based on the Akaike information criterion (AIC), the time course of median edge weight was better described by an exponential than a linear model (AIC~exp~ = `r AIC.GGP %>% filter(lab == 0) %>% pull('value')`, AIC~lin~ = `r AIC.GGP.lin %>% filter(lab == 0) %>% pull('value')`). The temporal profiles of intrahemispheric $q_{50}$ (`r figure.ref('fig.GGPtimerelpos')`) did not differ significantly between ipsi- and contralesional hemispheres with a trend towards larger decline in stroke hemispheres (Δ~ipsi~=`r tbl.GGP %>% filter(term=='del.relposipsi' & lab==0) %>% pull('estimate')` +/- `r tbl.GGP %>% filter(term=='del.relposipsi' & lab==0) %>% pull('std.error')`, p=`r tbl.GGP %>% filter(term=='del.relposipsi' & lab==0) %>% pull('p.value')`). 
+Subgroup modelling showed a significant exponential decline of median edge weight in stroke hemispheres (Δ=`r tbl.GGP.relpos %>% filter(lab == 0 & term=='del' & relpos=='ipsi') %>% pull('estimate')` +/- `r tbl.GGP.relpos %>% filter(lab == 0 & term=='del' & relpos=='ipsi') %>% pull('std.error')`, p=`r tbl.GGP.relpos %>% filter(lab == 0 & term=='del' & relpos=='ipsi') %>% pull('p.value')`; AIC~exp~ = `r AIC.GGP.relpos %>% filter(lab == 0 & relpos == 'ipsi') %>% pull('value')`, AIC~lin~ = `r AIC.GGP.relpos.lin %>% filter(lab == 0 & relpos == 'ipsi') %>% pull('value')`), but did not reveal a significant effect of time on connectivity in contralesional hemispheres (Δ=`r tbl.GGP.relpos %>% filter(lab == 0 & term=='del' & relpos=='contra') %>% pull('estimate')` +/- `r tbl.GGP.relpos %>% filter(lab == 0 & term=='del' & relpos=='contra') %>% pull('std.error')`, p=`r tbl.GGP.relpos %>% filter(lab == 0 & term=='del' & relpos=='contra') %>% pull('p.value')`; AIC~exp~ = `r AIC.GGP.relpos %>% filter(lab == 0 & relpos == 'contra') %>% pull('value')`, AIC~lin~ = `r AIC.GGP.relpos.lin %>% filter(lab == 0 & relpos == 'contra') %>% pull('value')`). Further details, including estimates of the nuisance model parameters a and b are given in supplementary table S-Tab. 2.
+
+
+
+#### Global network architecture
+```{r message=FALSE, warning=FALSE, include=FALSE, paged.print=TRUE, cache=TRUE,  cache.extra = tools::md5sum("./GGPtimerelpos.r")}
+source('./GGPtimerelpos.r')
+```
+Growth curve analysis of whole-brain global graph parameters using non-linear mixed-effects regression modelling revealed consistent effects of time (`r figure.ref('fig.GGPtimerelpos')`, `r table.ref('tab.GGPtimerelpos.ix')`). Global efficiency declined exponentially over time in stroke but not intact hemispheres. Modularity increased significantly in both stroke and intact hemispheres, with a numerically larger effect ipsilesionally. These effects were not sensitive to the choice of network density and persisted over a wide range of thresholds (Supplement). Inclusion of age and sex as nuisance regressors did not substantially change the results (not shown).
+```{r echo=FALSE, fig.height=3, fig.width=10, message=FALSE, warning=FALSE, fig.cap=fig.GGPtimerelpos_cap}
+ p.GGP.timecourse
+#  ggplotGrob() %>% 
+#  .[,8:19]  %>% grid::grid.draw()
+```
+```{r include=FALSE}
+tbl.AIC.GGP <- mutate(AIC.GGP, mod='exp') %>% 
+  bind_rows(mutate(AIC.GGP.lin, mod='lin')) %>% 
+  filter(lab != 0) %>% 
+  ungroup() %>% 
+  mutate(lab = as_labeller(GGP_names)(lab)) %>% 
+  mutate(value = as.character(value)) %>% 
+  dplyr::select(-c(threshold,name)) %>% 
+  spread(lab,value) %>% 
+  mutate(term="AIC") %>% 
+  unite(term,term,mod)
+```
+
+```{r echo=echoFlag, message=FALSE, warning=FALSE}
+tbl.GGP.relpos %>% 
+  bind_rows(tbl.GGP %>% add_column(relpos='both')) %>% 
+  filter(lab != 0) %>% droplevels() %>% 
+  dplyr::select(-c(df, statistic, conf.low, conf.high)) %>% 
+  ungroup() %>% 
+  mutate(lab = as_labeller(GGP_names)(lab)) %>% 
+  mutate(term = dplyr::recode(as.factor(term), `del.(Intercept)`='del')) %>% 
+  gather(statsname,value,estimate,std.error,p.value) %>% 
+  unite(temp,statsname,relpos) %>% 
+  spread(temp, value) %>% 
+  dplyr::select(lab, term
+                , estimate_both, std.error_both, p.value_both
+                , estimate_ipsi, std.error_ipsi, p.value_ipsi
+                , estimate_contra, std.error_contra, p.value_contra
+                ) %>% 
+  mutate(term = dplyr::recode(term, del = 'Δ', del.relposipsi = 'Δ~ipsi~')) %>% 
+  #bind_rows(tbl.AIC.GGP.relpos) %>% 
+  tbl.flex() %>% 
+  bold(i = ~term == 'Δ' & p.value_ipsi < 0.05, j = ~p.value_ipsi) %>% 
+  set_formatter(p.value_ipsi = pvalformatter) %>% 
+  bold(i = ~term == 'Δ' & p.value_contra < 0.05, j = ~p.value_contra) %>% 
+  set_formatter(p.value_contra = pvalformatter) %>% 
+  bold(i = ~term == 'Δ~ipsi~' & p.value_both < 0.05, j = ~p.value_both) %>% 
+  set_formatter(p.value_both = pvalformatter) %>% 
+  add_header_row(values = c('','','joint model','ipsilesional','contralesional'), colwidths = c(1,1,3,3,3)) %>% 
+  set_header_labels(values = list(lab = 'GGP'
+                                  ,term = 'parameter'
+                                  ,estimate_contra = 'estimate'
+                                  ,std.error_contra = 's.e.'
+                                  ,p.value_contra = 'p'
+                                  ,estimate_ipsi = 'estimate'
+                                  ,std.error_ipsi = 's.e.'
+                                  ,p.value_ipsi = 'p'
+                                  ,estimate_both = 'estimate'
+                                  ,std.error_both = 's.e.'
+                                  ,p.value_both = 'p')) %>% 
+  tbl.flex.post(caption) %>% 
+  merge_v(part = 'body') %>% 
+  merge_at(i = 1:2, j = 1, part = 'header') %>% 
+  merge_at(i = 1:2, j = 2, part = 'header')-> temp
+temp
+```
+`r table_nums('tab.GGPtimerelpos.ix')`
+
+
+<!--
+Both global efficiency and modularity were correlated strongly with median connectivity strength. After correcting for median connectivity strength using a two-stage approach to regress global graph parameters against subject-specific median connectivity predictions from a non-linear mixed-effects regression of $q_{50}$ against time (details omitted), a significant positive effect of time on ipsilesional modularity persisted. There was no additional effect of time on global efficiency or contralesional global graph parameters.
+-->
+
+#### Local network architecture
+As detailed in the Supplement, changes in the local graph parameters strength, efficiency and clustering were more pronounced in stroke hemispheres than contralesionally, and most pronounced in parts of the frontal, parietal and limbic lobes involving primary motor, premotor and supplementary motor areas as well as the cingulate cortex.  
+
+
+### Association of network properties with lesion volume
+#### Numerical connectivity and global graph parameters
+```{r message=FALSE, warning=FALSE, cache=FALSE, include=FALSE, paged.print=TRUE, cache=TRUE,  cache.extra = tools::md5sum("./GGPvol.r")}
+source('./GGPvol.r')
+```
+Global networks measures at different time points after stroke are depicted in relation to lesion volume in `r figure.ref('fig.GGPvol')`. Non-linear-mixed effects modelling revealed a significant positive association between lesion volume and global connectivity decline in ipsilesional but not contralesional hemispheres. This effect did not depend on age or sex of the patient, nor on the side of the lesion. Specifically, larger declines in ipsilesional median connectivity over time were observed in patients with larger stroke lesions, while there was no significant decline in patients with very small lesions. Orthogonally, median connectivity in stroke hemispheres did not depend on lesion volume in the acute phase, but a significant negative association was observed at all three later time points. Similar effects were observed for global graph parameters. Specifically, larger lesion volumes were associated with a larger decline in ipsilesional global efficiency, as well as a larger increase in ipsilesional modularity. Ipsilesional measures of network topology were associated with lesion volume in the subacute and chronic, but not the acute phase. There was no evidence of a relationship between size of the infarct and contralesional network metrics. Statistical details are provided in `r table.ref('tab.GGPvol.ix')`.
+
+```{r echo=FALSE, fig.height=4, fig.width=12, message=FALSE, warning=FALSE, fig.cap=fig.GGPvol_cap}
+p.GGP.vol %>% grid::grid.draw()
+```
+
+
+```{r echo=echoFlag, message=FALSE, warning=FALSE}
+tbl.GGP.vol.relpos %>% 
+  bind_rows(tbl.GGP.vol %>% add_column(relpos = 'both')) %>% 
+  dplyr::select(-c(conf.low, conf.high,df,statistic)) %>% 
+  ungroup() %>% 
+  mutate(lab = as_labeller(GGP_names)(lab) %>% as.character()) %>% 
+  gather(statsname,value,estimate,std.error,p.value) %>% 
+  unite(temp,statsname,relpos) %>% 
+  spread(temp, value) %>% 
+  dplyr::select(lab, term
+                , estimate_both, std.error_both, p.value_both
+                , estimate_ipsi, std.error_ipsi, p.value_ipsi
+                , estimate_contra, std.error_contra, p.value_contra) %>% 
+  mutate(term = dplyr::recode(as.factor(term), `del.(Intercept)` = 'Δ', 'del.logvol' = 'Δ~vol~', 'del.relposipsi' = 'Δ~ipsi~', 'del.logvol:relposipsi' = 'Δ~vol:ipsi~')) %>% 
+  mutate(term = forcats::fct_relevel(term, 'a','b','Δ', 'Δ~ipsi~')) %>% 
+  arrange(lab, term) %>% 
+  tbl.flex() %>% 
+  bold(i = ~ stringr::str_detect(term,'vol') & p.value_ipsi < 0.05, j = ~p.value_ipsi) %>% 
+  bold(i = ~ stringr::str_detect(term,'vol') & p.value_contra < 0.05, j = ~p.value_contra) %>%
+  bold(i = ~ stringr::str_detect(term,'vol') & p.value_both < 0.05, j = ~p.value_both) %>%
+  set_formatter(p.value_ipsi = pvalformatter, p.value_contra = pvalformatter, p.value_both = pvalformatter) %>% 
+  add_header_row(values = c('','','joint model','ipsilesional','contralesional'), colwidths = c(1,1,3,3,3)) %>% 
+  set_header_labels(values = list(lab = ''
+                                  ,term = ''
+                                  ,estimate_contra = 'estimate'
+                                  ,std.error_contra = 's.e.'
+                                  ,p.value_contra = 'p'
+                                  ,estimate_ipsi = 'estimate'
+                                  ,std.error_ipsi = 's.e.'
+                                  ,p.value_ipsi = 'p'
+                                  ,estimate_both = 'estimate'
+                                  ,std.error_both = 's.e.'
+                                  ,p.value_both = 'p')) %>% 
+  tbl.flex.post('') %>% merge_v(part = 'body')-> temp
+temp
+```
+`r table_nums('tab.GGPvol.ix')`
+
+
+In a univariate sensitivity analysis, these effects were stable across network densities imposed by proportional thresholding of network matrices. Paralleing global topology, change in local network integrity on the side of the lesion, but not conralesionally, was modulated by lesion volume. (Supplement)
+
+
+### Association of network properties with clinical variables 
+
+#### Global network measures
+```{r message=FALSE, warning=FALSE, cache=FALSE, include=FALSE, paged.print=TRUE, cache=TRUE,  cache.extra = tools::md5sum("./clinicalGGP.r")}
+source('./clinicalGGP.r')
+tidy.GGP.clinical.joint <- d.GGP.clinical.joint %>% 
+  mutate(tidy=map(mdl,tidy)) %>% 
+  unnest(tidy)
+
+```
+
+`r figure.ref('fig.GGPclinical')` shows clinical outcome parameters in relation to change in global network metrics. Two-stage regressions revealed a significant association between decline of ipsilesional median connectivity until one, three and twelve months after stroke and NIHSS score (p=`r tidy.GGP.clinical.joint %>% filter(lab == 0 & clin.meas.name=='NIHSS' & term == 'fitted(fm)') %>% pull('p.value')`), relative grip strength (p=`r tidy.GGP.clinical.joint %>% filter(lab == 0 & clin.meas.name=='rGS' & term == 'fitted(fm)') %>% pull('p.value')`), and FM score (p=`r tidy.GGP.clinical.joint %>% filter(lab == 0 & clin.meas.name=='FM' & term == 'fitted(fm)') %>% pull('p.value')`) at these time points. Similarly, loss of global efficiency and gain of global modularity in stroke hemispheres was associated with higher NIHSS scores (p~Eff~=`r tidy.GGP.clinical.joint %>% filter(lab == 1 & clin.meas.name=='NIHSS' & term == 'fitted(fm)') %>% pull('p.value')`, p~Mod~=`r tidy.GGP.clinical.joint %>% filter(lab == 3 & clin.meas.name=='NIHSS' & term == 'fitted(fm)') %>% pull('p.value')`) as well as lower relative grip strengths (p~Eff~=`r tidy.GGP.clinical.joint %>% filter(lab == 1 & clin.meas.name=='rGS' & term == 'fitted(fm)') %>% pull('p.value')`, p~Mod~=`r tidy.GGP.clinical.joint %>% filter(lab == 3 & clin.meas.name=='rGS' & term == 'fitted(fm)') %>% pull('p.value')`) and lower FM scores (p~Eff~=`r tidy.GGP.clinical.joint %>% filter(lab == 1 & clin.meas.name=='FM' & term == 'fitted(fm)') %>% pull('p.value')`, p~Mod~=`r tidy.GGP.clinical.joint %>% filter(lab == 3 & clin.meas.name=='FM' & term == 'fitted(fm)') %>% pull('p.value')`).
+
+
+
+```{r echo=FALSE, fig.height=6, fig.width=6, message=FALSE, warning=FALSE, fig.cap=fig.GGPclinical_cap}
+p.GGP.clinical.joint %>%  grid::grid.draw()
+```
+`r table.ref('tab.GGPclinical.vol')` reports statistical details of volume-corrected regressions. After including lesion size as a nuisance regressor, the associations of change in global network architecture and NIHSS persisted at a lower statistical significance. The relationship between global modularity and relative grip strength, and global efficiency and Fugl-Meyer score failed to maintain statistical significance.
+```{r echo=echoFlag, message=FALSE, warning=FALSE}
+tbl.GGP.clinical.vol.preformat  %>% 
+  mutate(clin.meas.name = forcats::fct_relevel(clin.meas.name, 'NIHSS','rGS','FM')) %>% 
+  mutate(lab = forcats::fct_relevel(lab, 'q50','Efficiency','Modularity')) %>% 
+  mutate(clin.meas.name = dplyr::recode(clin.meas.name,FM='FM^*')) %>% 
+  arrange(clin.meas.name,lab) %>% 
+  flextable() %>% 
+  bold(i = ~p.value < 0.05, j = ~p.value) %>% 
+  bold(i = ~p.value_1 < 0.05, j = ~p.value_1) %>%
+  bold(i = ~p.value_3 < 0.05, j = ~p.value_3) %>%
+  bold(i = ~p.value_12 < 0.05, j = ~p.value_12) %>%
+  set_formatter(p.value = pvalformatter, p.value_1 = pvalformatter, p.value_3 = pvalformatter, p.value_12 = pvalformatter) %>% 
+  add_header_row(values = c('','','pooled model','1m','3m','12m'), colwidths = c(1,1,3,3,3,3)) %>% 
+  set_header_labels(values = list(clin.meas.name = ''
+                                  ,lab = ''
+                                  ,estimate = 'estimate'
+                                  ,std.error = 's.e.'
+                                  ,p.value = 'p'
+                                  ,estimate_1 = 'estimate'
+                                  ,std.error_1 = 's.e.'
+                                  ,p.value_1 = 'p'
+                                  ,estimate_3 = 'estimate'
+                                  ,std.error_3 = 's.e.'
+                                  ,p.value_3 = 'p'
+                                  ,estimate_12 = 'estimate'
+                                  ,std.error_12 = 's.e.'
+                                  ,p.value_12 = 'p')) %>% 
+  tbl.flex.post('',8,8) %>%
+  merge_v(part = 'header') %>% merge_v(j = 1, part = 'body')-> temp
+temp
+```
+`r table_nums('tab.GGPclinical.vol')`
+
+Post-hoc tests for associations between decline of connectivity and clinical outcome at fixed time points revealed consistent effects that were strongest after three months, but did not, individually, reach statistical significance (see Fig SX in the supplement for a visual representation of cross-sectional regressions).
+
+#### Local graph measures
+Mass-univariate two-stage linear and quasi-Poisson regressions identified associations between clinical outcome and change in local connectivity in a total of `r 7` brain areas. Higher residual NIHSS scores were most strongly associated with loss of local connectivity in pre-/postcental, inferior frontal, and cingulate cortices, as well as the thalamus. Statistical details including lesion volume corrected regression results are provided in the Supplement.

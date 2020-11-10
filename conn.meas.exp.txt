@@ -1,0 +1,7 @@
+conn.meas.name,relpos,effect,group,term,estimate,std.error,df,statistic,p.value
+q50,contra,fixed,fixed,a,0.007387,0.05652,81,0.1307,0.8963
+q50,contra,fixed,fixed,b,0.06934,0.8484,81,0.08173,0.9351
+q50,contra,fixed,fixed,c,0.4762,0.006145,81,77.5,9.404e-78
+q50,ipsi,fixed,fixed,a,0.01472,0.007222,81,2.039,0.04475
+q50,ipsi,fixed,fixed,b,0.1875,0.2652,81,0.707,0.4816
+q50,ipsi,fixed,fixed,c,0.4692,0.006885,81,68.16,2.666e-73

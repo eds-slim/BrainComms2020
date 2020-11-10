@@ -1,0 +1,5 @@
+conn.meas.name,effect,group,term,estimate,std.error,df,statistic,p.value
+q50,fixed,fixed,a.(Intercept),0.0003105,0.005623,193,0.05522,0.956
+q50,fixed,fixed,a.relposipsi,0.01654,0.006786,193,2.438,0.01568
+q50,fixed,fixed,b,0.3579,0.3325,193,1.076,0.2831
+q50,fixed,fixed,c,0.4734,0.00558,193,84.83,9.975e-155

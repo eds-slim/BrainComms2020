@@ -1,0 +1,59 @@
+---
+title: "LGP Table"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+require(kableExtra)
+```
+
+```{r message=FALSE, warning=FALSE, chache=FALSE, include=FALSE}
+source('loaddata.r')
+```
+```{r message=FALSE, warning=FALSE, chache=TRUE, include=FALSE, cache.extra=tools::md5sum("./LGPtimerelpos.r")}
+stats.LGP<-d.LGP %>%
+  group_by(LGP.name, node) %>%
+  nest() %>%
+  mutate(mdl=map(data,~safely(nlme.exp)(., response = 'LGP.value', preds=list(a='relpos', b='1',del='relpos'))$result)) %>%
+  mutate(tidy = map(mdl, ~safely(tidy)(., conf.int=T)$result), AIC = map(mdl,~safely(AIC)(.)$result %>% enframe())) %>% 
+  unnest(tidy,.drop = T)
+
+stats.LGP.relpos<-d.LGP %>%
+  filter(relpos=='ipsi') %>% 
+  group_by(LGP.name, node, relpos) %>%
+  nest() %>%
+  mutate(mdl=map(data,~safely(nlme.exp)(., response = 'LGP.value', preds=list(a='1', b='1',del='1'))$result)) %>%
+  mutate(tidy = map(mdl, ~safely(tidy)(., conf.int=T)$result)) %>% 
+  unnest(tidy,.drop = T)
+```
+
+```{r}
+tbl.LGP<-stats.LGP %>% 
+  dplyr::select(-c(group, effect, df, statistic, conf.low, conf.high)) %>% 
+  filter(LGP.name %in% c('strength','efficiency','clustering') & term %in% c('a.relposcontra', 'del.relposcontra')) %>% 
+  group_by(node,LGP.name) %>% 
+  nest() %>% 
+  mutate(p.min = map_dbl(data,~min(.$p.value))) %>% 
+  filter(p.min<0.05) %>% 
+  unnest(data) %>% 
+  mutate(stats = cell_spec(x = sprintf('%1.2f +/- %1.2f, p=%1.4f',estimate, std.error, p.value), format = 'html', bold = p.value<0.05/36)) %>% 
+  dplyr::select(-c(p.min,estimate, std.error, p.value)) %>% 
+  spread(LGP.name,stats, fill = '') %>% 
+  #kable(format = 'markdown')
+  kable(format='html', escape=F) %>% 
+  kable_styling(bootstrap_options = c('striped','bordered')) %>% 
+  collapse_rows(columns = 1)
+```
+```{r}
+tbl.LGP.relpos<-stats.LGP.relpos %>% 
+  dplyr::select(-c(group, effect, df, statistic, conf.low, conf.high)) %>% 
+  filter(LGP.name %in% c('strength','efficiency','clustering') & term %in% c('del') & p.value<0.05 & estimate<0) %>% 
+  mutate(stats = cell_spec(x = sprintf('$\\Delta$=%1.2f +/- %1.2f, p=%1.4f',estimate, std.error, p.value), format = 'html', bold = p.value<0.05/36)) %>% 
+  dplyr::select(-c(relpos, term, estimate, std.error, p.value)) %>% 
+  spread(LGP.name,stats, fill = "n.s.") %>% 
+  #kable(format = 'markdown')
+  kable(format='html', escape=F) %>% 
+  kable_styling(bootstrap_options = c('striped','bordered')) %>% 
+  collapse_rows(columns = 1)
+```
